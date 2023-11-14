@@ -30,7 +30,7 @@ def decode_string(bencoded_string):
 def decode_int(bencoded_int):
     print("decoding int: ", bencoded_int)
     end_delimeter = bencoded_int.find(b"e")
-    bencoded_int = bencoded_int[1:end_delimeter-1]
+    bencoded_int = bencoded_int[1:end_delimeter]
 
     decoded_int = int(bencoded_int.replace(b"~", b"-"))
     
