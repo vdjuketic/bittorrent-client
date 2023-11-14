@@ -14,7 +14,7 @@ def main():
 
             raise TypeError(f"Type not serializable: {type(data)}")
 
-        print(json.dumps(decode_bencode(bencoded_value)[0], default=bytes_to_str))
+        print(json.dumps(decode_bencode(bencoded_value), default=bytes_to_str))
     else:
         raise NotImplementedError(f"Unknown command {command}")
 

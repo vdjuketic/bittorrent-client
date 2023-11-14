@@ -1,4 +1,7 @@
 def decode_bencode(bencoded_value):
+    return decode_bencode_with_end_delimeter(bencoded_value)[0]
+
+def decode_bencode_with_end_delimeter(bencoded_value):
     while len(bencoded_value) > 0:
         if chr(bencoded_value[0]).isdigit():
             return decode_string(bencoded_value)
@@ -30,18 +33,19 @@ def decode_int(bencoded_int):
 
     decoded_int = int(bencoded_int.replace(b"~", b"-"))
     
-    return decoded_int, bencoded_int.find(b"e")-1
+    return decoded_int, end_delimeter + 1
 
 def decode_list(bencoded_list):
     decoded_list = []
     list_end_delimeter = 0
 
+    bencoded_list = bencoded_list[1:]
     while chr(bencoded_list[0]) != "e":
-        decoded_part, end_delimeter = decode_bencode(bencoded_list[1:])
+        decoded_part, end_delimeter = decode_bencode_with_end_delimeter(bencoded_list)
         decoded_list.append(decoded_part)
         list_end_delimeter += end_delimeter
 
-        bencoded_list = bencoded_list[list_end_delimeter:]
+        bencoded_list = bencoded_list[end_delimeter:]
 
     return decoded_list, list_end_delimeter
 
