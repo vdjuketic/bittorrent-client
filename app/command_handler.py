@@ -36,7 +36,7 @@ def handleInfoCommand(filename):
 
             print(f"Tracker URL: {tracker_url}")
             print(f"Length: {file_length}")
-            print(f"Info hash: {info_hash}")
+            print(f"Info Hash: {info_hash}")
 
     except FileNotFoundError:
         log.error(f"File {filename} not found !")
