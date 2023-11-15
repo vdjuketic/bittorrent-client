@@ -3,7 +3,6 @@ def decode_bencode(bencoded_value):
 
 def decode_bencode_with_end_delimeter(bencoded_value):
     #print("decoding: ", bencoded_value)
-    print("decoding: ", bencoded_value)
     if chr(bencoded_value[0]).isdigit():
         return decode_string(bencoded_value)
     
