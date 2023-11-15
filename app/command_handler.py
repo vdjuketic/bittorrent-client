@@ -5,19 +5,17 @@ from typing import Any
 
 from . decoder import decode_bencode
 
-def handle_command(command: str, *args: str) -> Any:
+def handle_command(command: str) -> Any:
     if command == "decode":
-        handleDecodeCommand()
+        handleDecodeCommand(sys.argv[2].encode())
 
     elif command == "info":
-        handleInfoCommand()
+        handleInfoCommand(sys.argv[2].encode())
 
     else:
         raise NotImplementedError(f"Unknown command {command}")
     
-def handleDecodeCommand():
-    bencoded_value = sys.argv[2].encode()
-
+def handleDecodeCommand(bencoded_value):
     def bytes_to_str(data):
         if isinstance(data, bytes):
             return data.decode()
@@ -26,9 +24,8 @@ def handleDecodeCommand():
 
     print(json.dumps(decode_bencode(bencoded_value), default=bytes_to_str))
 
-def handleInfoCommand():
+def handleInfoCommand(filename):
     try:
-        filename = sys.argv[2].encode()
         with open(filename, 'rb') as file:
             decoded_data = decode_bencode(file.read())
 
@@ -39,4 +36,4 @@ def handleInfoCommand():
             print(f"Length: {file_length}")
 
     except FileNotFoundError:
-        log.error(f"File {sys.argv[2]} not found !")
+        log.error(f"File {filename} not found !")
