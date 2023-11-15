@@ -37,6 +37,15 @@ def test_decode_dictionary():
         "hello": 52
     }
 
+def test_decode_nested_dictionary():
+    assert decode_bencode(b"d10:inner_dictd4:key16:value14:key2i42e8:list_keyl5:item15:item2i3eeee") == {
+        "inner_dict": {
+            "key1": b"value1", 
+            "key2": 42, 
+            "list_key": [b"item1", b"item2", 3]
+        }
+    }
+
 def test_decode_raise_exception_when_input_is_not_valid():
     with pytest.raises(NotImplementedError):
         decode_bencode(b"e")
