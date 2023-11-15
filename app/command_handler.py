@@ -34,6 +34,8 @@ def handleInfoCommand(filename):
             file_length = decoded_data['info']['length']
             info_hash = hashlib.sha1(encode_bencode(decoded_data["info"])).hexdigest()
 
+            print(f"Tracker URL: {tracker_url}")
+            print(f"Length: {file_length}")
             print(f"Info hash: {info_hash}")
 
     except FileNotFoundError:
