@@ -1,9 +1,10 @@
 import sys
 import json
+import hashlib
 import logging as log
-from typing import Any
 
-from . decoder import decode_bencode
+from typing import Any
+from . bencode import encode_bencode, decode_bencode
 
 def handle_command(command: str) -> Any:
     if command == "decode":
@@ -31,9 +32,11 @@ def handleInfoCommand(filename):
 
             tracker_url = decoded_data['announce'].decode()
             file_length = decoded_data['info']['length']
+            info_hash = hashlib.sha1(encode_bencode(decoded_data["info"])).hexdigest()
 
             print(f"Tracker URL: {tracker_url}")
             print(f"Length: {file_length}")
+            print(f"Info hash: {info_hash}")
 
     except FileNotFoundError:
         log.error(f"File {filename} not found !")

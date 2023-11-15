@@ -1,5 +1,5 @@
 import pytest
-from decoder import decode_bencode
+from bencode import decode_bencode
 
 def test_decode_string():
     assert decode_bencode(b"5:hello") == b"hello"
