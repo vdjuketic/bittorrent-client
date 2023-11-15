@@ -33,4 +33,4 @@ def test_decode_nested_lists():
 
 def test_decode_raise_exception_when_input_is_not_valid():
     with pytest.raises(NotImplementedError):
-        decode_bencode(b"k")
+        decode_bencode(b"e")
