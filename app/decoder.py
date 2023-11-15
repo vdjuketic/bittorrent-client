@@ -11,6 +11,9 @@ def decode_bencode_with_end_delimeter(bencoded_value):
 
     elif chr(bencoded_value[0]) == "l":
         return decode_list(bencoded_value)
+    
+    elif chr(bencoded_value[0]) == "d":
+        return decode_dictionary(bencoded_value)
         
     else:
         raise NotImplementedError("Only strings, digits and lists are supported at the moment")
@@ -50,4 +53,17 @@ def decode_list(bencoded_list):
     #print("decoding list: ", bencoded_list)
     return decoded_list, current_char + 1
 
+def decode_dictionary(bencoded_dictionary):
+    decoded_dictionary = {}
+    current_char = 1
 
+    while chr(bencoded_dictionary[current_char]) != "e":
+        decoded_key, key_chars_read = decode_bencode_with_end_delimeter(bencoded_dictionary[current_char:])
+        current_char += key_chars_read
+
+        decoded_value, value_chars_read = decode_bencode_with_end_delimeter(bencoded_dictionary[current_char:])
+        current_char += value_chars_read
+
+        decoded_dictionary[decoded_key.decode("utf-8")] = decoded_value
+
+    return decoded_dictionary, current_char + 1
