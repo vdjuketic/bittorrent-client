@@ -50,7 +50,6 @@ def decode_list(bencoded_list):
         decoded_list.append(decoded_part)
         current_char += chars_read
 
-    #print("decoding list: ", bencoded_list)
     return decoded_list, current_char + 1
 
 def decode_dictionary(bencoded_dictionary):
