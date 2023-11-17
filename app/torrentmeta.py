@@ -31,7 +31,7 @@ class TorrentMeta:
 
         res = f"""Tracker URL: {self.tracker_url}
         Length: {self.file_length}
-        Info Hash: {self.info_hash}
+        Info Hash: {hashlib.sha1(self.info_hash).hexdigest()}
         Piece Length: {self.piece_length}
         Piece Hashes: 
         {hashes}"""
