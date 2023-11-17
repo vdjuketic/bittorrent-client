@@ -1,10 +1,12 @@
 import sys
 import json
+import requests
 import logging as log
 
 from typing import Any
-from bencode import decode_bencode
-from torrentmeta import TorrentMeta
+from . bencode import decode_bencode
+from . torrentmeta import TorrentMeta
+from . tracker_dto import TrackerDTO
 
 
 def handle_command(command: str) -> Any:
@@ -13,6 +15,9 @@ def handle_command(command: str) -> Any:
 
     elif command == "info":
         handle_info_command(sys.argv[2].encode())
+
+    elif command == "peers":
+        handle_peers_command(sys.argv[2].encode())
 
     else:
         raise NotImplementedError(f"Unknown command {command}")
@@ -31,8 +36,36 @@ def handle_decode_command(bencoded_value):
 def handle_info_command(filename):
     try:
         with open(filename, "rb") as file:
-            torrent_meta = TorrentMeta(decode_bencode(file.read()))
+            torrent_meta = TorrentMeta.from_data(decode_bencode(file.read()))
             print(torrent_meta)
 
     except FileNotFoundError:
         log.error("File %s not found !", filename)
+
+def handle_peers_command(filename):
+    try:
+        with open(filename, "rb") as file:
+            torrent_meta = TorrentMeta(decode_bencode(file.read()))
+            tracker_dto = TrackerDTO(torrent_meta)
+
+            response = requests.get(
+                url = torrent_meta.tracker_url, params = tracker_dto.to_json())
+
+            peers = decode_peers(response.content)
+            for ip, port in peers:
+                print(f"{ip}:{port}")
+
+    except FileNotFoundError:
+        log.error("File %s not found !", filename)
+
+def decode_peers(data):
+    decoded_value = decode_bencode(data)
+    print(decoded_value)
+    return decode_address(decoded_value["peers"])
+
+def decode_address(peers):
+    length = 6
+    for i in range(0, len(peers), length):
+        ip = ".".join(str(b) for b in peers[i : i + 4])
+        port = peers[i + 4] << 8 | peers[i + 5]
+        yield ip, port

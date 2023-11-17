@@ -2,7 +2,7 @@ import hashlib
 from dataclasses import dataclass
 from typing import List
 
-from bencode import encode_bencode
+from . bencode import encode_bencode
 
 
 @dataclass
@@ -16,7 +16,7 @@ class TorrentMeta:
     def __init__(self, data):
         self.tracker_url = data["announce"].decode()
         self.file_length = data["info"]["length"]
-        self.info_hash = hashlib.sha1(encode_bencode(data["info"])).hexdigest()
+        self.info_hash = hashlib.sha1(encode_bencode(data["info"])).digest()
         self.piece_length = data["info"]["piece length"]
 
         pieces_string = data["info"]["pieces"]
