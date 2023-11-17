@@ -36,7 +36,7 @@ def handle_decode_command(bencoded_value):
 def handle_info_command(filename):
     try:
         with open(filename, "rb") as file:
-            torrent_meta = TorrentMeta.from_data(decode_bencode(file.read()))
+            torrent_meta = TorrentMeta(decode_bencode(file.read()))
             print(torrent_meta)
 
     except FileNotFoundError:
