@@ -1,6 +1,7 @@
 import hashlib
 from dataclasses import dataclass
-from . torrentmeta import TorrentMeta
+
+from app.models.torrentmeta import TorrentMeta
 
 @dataclass
 class TrackerDTO():

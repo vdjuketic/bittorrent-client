@@ -2,7 +2,7 @@ import hashlib
 from dataclasses import dataclass
 from typing import List
 
-from . bencode import encode_bencode
+from app.util.bencode import encode_bencode
 
 
 @dataclass

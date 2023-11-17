@@ -1,5 +1,5 @@
 import pytest
-from bencode import decode_bencode
+from app.util.bencode import decode_bencode
 
 
 def test_decode_string():

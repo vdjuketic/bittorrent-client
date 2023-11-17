@@ -1,5 +1,5 @@
 import pytest
-from bencode import encode_bencode
+from app.util.bencode import encode_bencode
 
 
 def test_encode_string():
