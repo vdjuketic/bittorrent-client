@@ -3,13 +3,14 @@ from dataclasses import dataclass
 
 from app.models.torrentmeta import TorrentMeta
 
+
 @dataclass
-class TrackerDTO():
+class TrackerDTO:
     info_hash: str
     peer_id: str
     port: int
     uploaded: int
-    downloaded: int 
+    downloaded: int
     left: int
     compact: int
 
@@ -23,11 +24,12 @@ class TrackerDTO():
         self.compact = 1
 
     def to_json(self):
-        return {"info_hash": self.info_hash,
+        return {
+            "info_hash": self.info_hash,
             "peer_id": self.peer_id,
             "port": self.port,
             "uploaded": self.uploaded,
             "downloaded": self.downloaded,
             "left": self.left,
-            "compact": self.compact
+            "compact": self.compact,
         }

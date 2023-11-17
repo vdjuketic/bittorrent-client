@@ -41,6 +41,7 @@ def handle_info_command(filename):
     except FileNotFoundError:
         log.error("File %s not found !", filename)
 
+
 def handle_peers_command(filename):
     try:
         with open(filename, "rb") as file:
@@ -49,4 +50,3 @@ def handle_peers_command(filename):
 
     except FileNotFoundError:
         log.error("File %s not found !", filename)
-
