@@ -60,7 +60,6 @@ def handle_peers_command(filename):
 
 def decode_peers(data):
     decoded_value = decode_bencode(data)
-    print(decoded_value)
     return decode_address(decoded_value["peers"])
 
 def decode_address(peers):

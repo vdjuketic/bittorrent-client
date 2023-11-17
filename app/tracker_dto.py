@@ -1,4 +1,4 @@
-import json
+import hashlib
 from dataclasses import dataclass
 from . torrentmeta import TorrentMeta
 
@@ -13,7 +13,7 @@ class TrackerDTO():
     compact: int
 
     def __init__(self, meta: TorrentMeta):
-        self.info_hash = meta.info_hash
+        self.info_hash = hashlib.sha1(meta.info_hash).digest()
         self.peer_id = "00112233445566778899"
         self.port = 6881
         self.uploaded = 0
