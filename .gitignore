@@ -154,3 +154,6 @@ cython_debug/
 
 #VS code
 .vscode/
+
+#venv
+bittorrent_client/
