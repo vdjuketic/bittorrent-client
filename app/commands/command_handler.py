@@ -1,4 +1,3 @@
-import sys
 import json
 import logging as log
 import argparse
@@ -11,17 +10,31 @@ from app.peer.peer_client import PeerClient
 
 
 def handle_command(command: str) -> Any:
+    parser = argparse.ArgumentParser()
     if command == "decode":
-        handle_decode_command(sys.argv[2].encode())
+        parser.add_argument("bencoded_value")
+
+        p = parser.parse_args()
+        handle_decode_command(p.bencoded_value)
 
     elif command == "info":
-        handle_info_command(sys.argv[2])
+        parser.add_argument("filename")
+
+        p = parser.parse_args()
+        handle_info_command(p.filename)
 
     elif command == "peers":
-        handle_peers_command(sys.argv[2])
+        parser.add_argument("filename")
+
+        p = parser.parse_args()
+        handle_peers_command(p.filename)
 
     elif command == "handshake":
-        handle_handshake_command(sys.argv[2], sys.argv[3])
+        parser.add_argument("filename")
+        parser.add_argument("url")
+
+        p = parser.parse_args()
+        handle_handshake_command(p.filename, p.url)
 
     elif command == "download_piece":
         parser = argparse.ArgumentParser()
