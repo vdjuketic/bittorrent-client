@@ -11,11 +11,13 @@ from app.peer.peer_client import PeerClient
 
 def handle_command(command: str) -> Any:
     parser = argparse.ArgumentParser()
+    parser.add_argument("command")
+
     if command == "decode":
         parser.add_argument("bencoded_value")
-
+        
         p = parser.parse_args()
-        handle_decode_command(p.bencoded_value)
+        handle_decode_command(p.bencoded_value.encode())
 
     elif command == "info":
         parser.add_argument("filename")
@@ -37,7 +39,6 @@ def handle_command(command: str) -> Any:
         handle_handshake_command(p.filename, p.url)
 
     elif command == "download_piece":
-        parser = argparse.ArgumentParser()
         parser.add_argument("--output", "-o")
         parser.add_argument("command")
         parser.add_argument("filename")
