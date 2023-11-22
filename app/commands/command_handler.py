@@ -40,7 +40,6 @@ def handle_command(command: str) -> Any:
 
     elif command == "download_piece":
         parser.add_argument("--output", "-o")
-        parser.add_argument("command")
         parser.add_argument("filename")
         parser.add_argument("piece_index")
 
@@ -86,9 +85,7 @@ def handle_handshake_command(filename, url):
         with open(filename, "rb") as file:
             torrent_meta = TorrentMeta(decode_bencode(file.read()))
 
-            host, port = tuple(url.split(":"))
-
-            client = PeerClient(host, port)
+            client = PeerClient(tuple(url.split(":")))
             client.connect()
             client.perform_handshake(torrent_meta.info_hash)
 
