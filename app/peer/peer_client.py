@@ -61,6 +61,7 @@ class PeerClient:
 
         downloaded_piece_hash = hashlib.sha1(downloaded_piece).hexdigest()
 
+        print(downloaded_piece)
         if downloaded_piece_hash != piece_hash[piece_index]:
             log.error(f"Integrity check failed for piece {piece_index}")
         else:
