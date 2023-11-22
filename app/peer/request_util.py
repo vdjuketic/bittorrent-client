@@ -10,8 +10,11 @@ def get_peers_from_tracker(torrent_meta: TorrentMeta):
     response = requests.get(url=torrent_meta.tracker_url, params=tracker_dto.to_json())
 
     peers = decode_peers(response.content)
+    peer_urls = []
     for ip, port in peers:
         print(f"{ip}:{port}")
+        peer_urls.append((ip, port))
+    return peer_urls
 
 
 def decode_peers(data):

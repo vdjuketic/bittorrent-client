@@ -1,5 +1,5 @@
 import pytest
-from app.util.request_util import decode_address
+from peer.request_util import decode_address
 
 
 def test_decode_address_single_peer():

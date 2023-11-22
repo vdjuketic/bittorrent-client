@@ -1,14 +1,13 @@
 import sys
 import json
-import struct
-import hashlib
 import logging as log
+import argparse
 
 from typing import Any
 from app.util.bencode import decode_bencode
 from app.models.torrentmeta import TorrentMeta
-from app.util.request_util import get_peers_from_tracker
-from app.util.socketutil import send_handshake
+from app.peer.request_util import get_peers_from_tracker
+from app.peer.peer_client import PeerClient
 
 
 def handle_command(command: str) -> Any:
@@ -16,13 +15,23 @@ def handle_command(command: str) -> Any:
         handle_decode_command(sys.argv[2].encode())
 
     elif command == "info":
-        handle_info_command(sys.argv[2].encode())
+        handle_info_command(sys.argv[2])
 
     elif command == "peers":
-        handle_peers_command(sys.argv[2].encode())
+        handle_peers_command(sys.argv[2])
 
     elif command == "handshake":
-        handle_handshake_command(sys.argv[2].encode(), sys.argv[3].encode())
+        handle_handshake_command(sys.argv[2], sys.argv[3])
+
+    elif command == "download_piece":
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--output", "-o")
+        parser.add_argument("command")
+        parser.add_argument("filename")
+        parser.add_argument("piece_index")
+
+        p = parser.parse_args()
+        handle_download_piece_command(p.output, p.filename, p.piece_index)
 
     else:
         raise NotImplementedError(f"Unknown command {command}")
@@ -62,23 +71,38 @@ def handle_handshake_command(filename, url):
     try:
         with open(filename, "rb") as file:
             torrent_meta = TorrentMeta(decode_bencode(file.read()))
-            request = generate_handshake_message(
-                torrent_meta.info_hash, b"00112233445566778899"
-            )
 
-            host, port = tuple(url.decode("utf-8").split(":"))
+            host, port = tuple(url.split(":"))
 
-            send_handshake(host, port, request)
+            client = PeerClient(host, port)
+            client.connect()
+            client.perform_handshake(torrent_meta.info_hash)
 
     except FileNotFoundError:
         log.error("File %s not found !", filename)
 
 
-def generate_handshake_message(info_hash, peer_id):
-    length = struct.pack(">B", 19)
-    protocol = b"BitTorrent protocol"
-    reserved = b"\x00" * 8
-    info_hash = hashlib.sha1(info_hash).digest()
-    peer_id = peer_id
+def handle_download_piece_command(location, filename, piece_index):
+    try:
+        try:
+            with open(filename, "rb") as file:
+                torrent_meta = TorrentMeta(decode_bencode(file.read()))
+                peers = get_peers_from_tracker(torrent_meta)
 
-    return length + protocol + reserved + info_hash + peer_id
+                # for peer in peers:
+                client = PeerClient(peers[0])
+                client.connect()
+                client.download_piece(
+                    torrent_meta.info_hash,
+                    torrent_meta.file_length,
+                    torrent_meta.piece_length,
+                    torrent_meta.piece_hashes,
+                    int(piece_index),
+                    location,
+                )
+
+        except FileNotFoundError:
+            log.error("File %s not found !", filename)
+
+    except FileNotFoundError:
+        log.error("File %s not found !", filename)
