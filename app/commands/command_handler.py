@@ -7,6 +7,7 @@ from app.util.bencode import decode_bencode
 from app.models.torrentmeta import TorrentMeta
 from app.peer.request_util import get_peers_from_tracker
 from app.peer.peer_client import PeerClient
+from app.util.file_util import write_to_file
 
 
 def handle_command(command: str) -> Any:
@@ -45,6 +46,13 @@ def handle_command(command: str) -> Any:
 
         p = parser.parse_args()
         handle_download_piece_command(p.output, p.filename, p.piece_index)
+    
+    elif command == "download":
+        parser.add_argument("--output", "-o")
+        parser.add_argument("filename")
+
+        p = parser.parse_args()
+        handle_download_command(p.output, p.filename)
 
     else:
         raise NotImplementedError(f"Unknown command {command}")
@@ -100,18 +108,39 @@ def handle_download_piece_command(location, filename, piece_index):
                 torrent_meta = TorrentMeta(decode_bencode(file.read()))
                 peers = get_peers_from_tracker(torrent_meta)
 
-                # for peer in peers:
+                # TODO download from multiple peers
                 client = PeerClient(peers[0])
                 client.connect()
-                client.download_piece(
+                client.perform_handshake(torrent_meta.info_hash)
+                content = client.download_piece(
                     torrent_meta,
-                    #torrent_meta.info_hash,
-                    #torrent_meta.file_length,
-                    #torrent_meta.piece_length,
-                    #torrent_meta.piece_hashes,
-                    int(piece_index),
-                    location,
+                    int(piece_index)
                 )
+                write_to_file(content, location)
+                print(f"Piece {piece_index} downloaded to {location}.")
+
+        except FileNotFoundError:
+            log.error("File %s not found !", filename)
+
+    except FileNotFoundError:
+        log.error("File %s not found !", filename)
+
+def handle_download_command(location, filename):
+    try:
+        try:
+            with open(filename, "rb") as file:
+                torrent_meta = TorrentMeta(decode_bencode(file.read()))
+                peers = get_peers_from_tracker(torrent_meta)
+
+                # TODO download from multiple peers
+                client = PeerClient(peers[0])
+                client.connect()
+                client.perform_handshake(torrent_meta.info_hash)
+                content = client.download(
+                    torrent_meta
+                )
+                write_to_file(content, location)
+                print(f"Downloaded {filename} downloaded to {location}.")
 
         except FileNotFoundError:
             log.error("File %s not found !", filename)

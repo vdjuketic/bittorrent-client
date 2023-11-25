@@ -23,10 +23,15 @@ class PeerClient:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, int(self.port)))
 
-    def download_piece(self, torrent_meta, piece_index, output_file):
-        piece_length = self.calculate_piece_length(torrent_meta, piece_index)
-        print(piece_length)
+    def download(self, torrent_meta):
+        content = b""
+        for index in range(0, len(torrent_meta.piece_hashes)):
+            content += self.download_piece(torrent_meta, index)
+        return content
+
+    def download_piece(self, torrent_meta, piece_index):
         self.perform_handshake(torrent_meta.info_hash)
+        piece_length = self.calculate_piece_length(torrent_meta, piece_index)
 
         _, message_id, message = self.receive_message()
         assert message_id == self.BITFIELD
@@ -39,7 +44,6 @@ class PeerClient:
         piece_offset = 0
         downloaded_piece = b""
         while piece_offset < piece_length:
-            print(piece_offset, piece_length)
             block_size = min(self.BLOCK_SIZE, piece_length - piece_offset)
 
             payload = (
@@ -65,12 +69,13 @@ class PeerClient:
         if downloaded_piece_hash != torrent_meta.piece_hashes[piece_index]:
             log.error(f"Integrity check failed for piece {piece_index}")
         else:
-            log.info(f"Downloaded piece: {piece_index} successfully")
-            with open(output_file, "wb") as f:
-                f.write(downloaded_piece)
-            print(f"Piece {piece_index} downloaded to {output_file}.")
+            print(f"Downloaded piece: {piece_index} successfully")
+            return downloaded_piece
+        
+        socket.close()
 
     def perform_handshake(self, info_hash):
+        self.connect()
         request = self.generate_handshake_message(info_hash, b"00112233445566778899")
         self.socket.send(request)
 
@@ -97,25 +102,21 @@ class PeerClient:
         return message[8:]
 
     def receive_message(self) -> tuple[int, int, bytes]:
-        # get payload length from first 4 bytes
         length = int.from_bytes(self.socket.recv(4), "big")
 
-        # if there's no length, message is a keepalive.
         if not length:
             return (0, -1, b"")
 
         message = self.socket.recv(length)
         received = len(message)
 
-        # first byte represents message id
         msg_id = int.from_bytes(message[:1], "big")
 
-        # get full payload
         while received < length:
             message += self.socket.recv(length - received)
             received = len(message)
 
-        log.info(f"Received message of type: {msg_id} and length: {length}")
+        log.info(f"Received message of type: {msg_id}")
         return (length, msg_id, message[1:])
     
     def calculate_piece_length(self, torrent_meta, piece_num):
