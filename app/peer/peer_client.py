@@ -27,13 +27,13 @@ class PeerClient:
     ):
         self.perform_handshake(info_hash)
 
-        _, _, message = self.receive_message()
-        #assert message_id == 5
+        _, message_id, message = self.receive_message()
+        assert message_id == self.BITFIELD
 
         self.send_message(self.INTERESTED, b"")
 
-        _, _, message = self.receive_message()
-        #assert message_id == 5
+        _, message_id, message = self.receive_message()
+        assert message_id == self.UNCHOKE
 
         piece_offset = 0
         downloaded_piece = b""
