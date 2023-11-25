@@ -4,6 +4,7 @@ import struct
 import hashlib
 import logging as log
 
+from app.models.torrentmeta import TorrentMeta
 
 class PeerClient:
     UNCHOKE = 1
@@ -22,10 +23,10 @@ class PeerClient:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, int(self.port)))
 
-    def download_piece(
-        self, info_hash, file_length, piece_length, piece_hash, piece_index, output_file
-    ):
-        self.perform_handshake(info_hash)
+    def download_piece(self, torrent_meta, piece_index, output_file):
+        piece_length = self.calculate_piece_length(torrent_meta, piece_index)
+        print(piece_length)
+        self.perform_handshake(torrent_meta.info_hash)
 
         _, message_id, message = self.receive_message()
         assert message_id == self.BITFIELD
@@ -38,6 +39,7 @@ class PeerClient:
         piece_offset = 0
         downloaded_piece = b""
         while piece_offset < piece_length:
+            print(piece_offset, piece_length)
             block_size = min(self.BLOCK_SIZE, piece_length - piece_offset)
 
             payload = (
@@ -60,7 +62,7 @@ class PeerClient:
 
         downloaded_piece_hash = hashlib.sha1(downloaded_piece).hexdigest()
 
-        if downloaded_piece_hash != piece_hash[piece_index]:
+        if downloaded_piece_hash != torrent_meta.piece_hashes[piece_index]:
             log.error(f"Integrity check failed for piece {piece_index}")
         else:
             log.info(f"Downloaded piece: {piece_index} successfully")
@@ -113,5 +115,12 @@ class PeerClient:
             message += self.socket.recv(length - received)
             received = len(message)
 
-        log.info(f"Received message of type: {msg_id} and length: {length}")
+        print(f"Received message of type: {msg_id} and length: {length}")
         return (length, msg_id, message[1:])
+    
+    def calculate_piece_length(self, torrent_meta, piece_num):
+        num_pieces = len(torrent_meta.piece_hashes)
+        if num_pieces - 1 != piece_num:
+            return torrent_meta.piece_length
+        else:
+            return torrent_meta.file_length % torrent_meta.piece_length

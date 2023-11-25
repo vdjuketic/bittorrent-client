@@ -104,10 +104,11 @@ def handle_download_piece_command(location, filename, piece_index):
                 client = PeerClient(peers[0])
                 client.connect()
                 client.download_piece(
-                    torrent_meta.info_hash,
-                    torrent_meta.file_length,
-                    torrent_meta.piece_length,
-                    torrent_meta.piece_hashes,
+                    torrent_meta,
+                    #torrent_meta.info_hash,
+                    #torrent_meta.file_length,
+                    #torrent_meta.piece_length,
+                    #torrent_meta.piece_hashes,
                     int(piece_index),
                     location,
                 )
