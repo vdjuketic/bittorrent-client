@@ -28,40 +28,38 @@ class PeerClient:
         self.perform_handshake(info_hash)
 
         _, _, message = self.receive_message()
+        #assert message_id == 5
 
         self.send_message(self.INTERESTED, b"")
 
         _, _, message = self.receive_message()
+        #assert message_id == 5
 
-        # Send REQUEST messages for each full block of BLOCK_SIZE size
-        begin_offset = 0
+        piece_offset = 0
         downloaded_piece = b""
-        while begin_offset < piece_length:
-            block_size = min(self.BLOCK_SIZE, piece_length - begin_offset)
+        while piece_offset < piece_length:
+            block_size = min(self.BLOCK_SIZE, piece_length - piece_offset)
 
             payload = (
                 piece_index.to_bytes(4, "big")
-                + begin_offset.to_bytes(4, "big")
+                + piece_offset.to_bytes(4, "big")
                 + block_size.to_bytes(4, "big")
             )
 
             self.send_message(self.REQUEST, payload)
 
-            length, msg_id, message = self.receive_message()
+            _, message_id, message = self.receive_message()
+            assert message_id == self.PIECE
 
-            # 4 bytes for block index
             block_piece = int.from_bytes(message[:4], "big")
-
-            # 4 bytes for offset
             block_begin = int.from_bytes(message[4:8], "big")
             message = message[8:]
 
             downloaded_piece += message
-            begin_offset += block_size
+            piece_offset += block_size
 
         downloaded_piece_hash = hashlib.sha1(downloaded_piece).hexdigest()
 
-        print(downloaded_piece)
         if downloaded_piece_hash != piece_hash[piece_index]:
             log.error(f"Integrity check failed for piece {piece_index}")
         else:
