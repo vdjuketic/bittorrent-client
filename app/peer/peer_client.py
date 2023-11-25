@@ -115,7 +115,7 @@ class PeerClient:
             message += self.socket.recv(length - received)
             received = len(message)
 
-        print(f"Received message of type: {msg_id} and length: {length}")
+        log.info(f"Received message of type: {msg_id} and length: {length}")
         return (length, msg_id, message[1:])
     
     def calculate_piece_length(self, torrent_meta, piece_num):
