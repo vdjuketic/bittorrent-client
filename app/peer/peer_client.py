@@ -3,8 +3,14 @@ import binascii
 import struct
 import hashlib
 import logging as log
+from enum import Enum
 
-from app.models.torrentmeta import TorrentMeta
+from app.models.piece import Piece
+
+class PeerClientStatus(Enum):
+    DISCONNECTED = 1
+    CONNECTED = 2
+    WORKING = 3
 
 class PeerClient:
     UNCHOKE = 1
@@ -18,61 +24,70 @@ class PeerClient:
     def __init__(self, url):
         self.host, self.port = url
         self.socket = None
+        self.status = PeerClientStatus.DISCONNECTED
 
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, int(self.port)))
+        self.status = PeerClientStatus.CONNECTED
+    
+    def disconnect(self):
+        self.socket.close()
+        self.status = PeerClientStatus.DISCONNECTED
 
-    def download(self, torrent_meta):
-        content = b""
-        for index in range(0, len(torrent_meta.piece_hashes)):
-            content += self.download_piece(torrent_meta, index)
-        return content
-
-    def download_piece(self, torrent_meta, piece_index):
-        self.perform_handshake(torrent_meta.info_hash)
-        piece_length = self.calculate_piece_length(torrent_meta, piece_index)
-
-        _, message_id, message = self.receive_message()
-        assert message_id == self.BITFIELD
-
-        self.send_message(self.INTERESTED, b"")
-
-        _, message_id, message = self.receive_message()
-        assert message_id == self.UNCHOKE
-
-        piece_offset = 0
+    def download_piece(self, piece: Piece):
+        self.status = PeerClientStatus.WORKING
+        print(f"starting download of piece {piece.piece_num}")
         downloaded_piece = b""
-        while piece_offset < piece_length:
-            block_size = min(self.BLOCK_SIZE, piece_length - piece_offset)
 
-            payload = (
-                piece_index.to_bytes(4, "big")
-                + piece_offset.to_bytes(4, "big")
-                + block_size.to_bytes(4, "big")
-            )
-
-            self.send_message(self.REQUEST, payload)
+        try:
+            self.perform_handshake(piece.info_hash)
 
             _, message_id, message = self.receive_message()
-            assert message_id == self.PIECE
+            assert message_id == self.BITFIELD
 
-            block_piece = int.from_bytes(message[:4], "big")
-            block_begin = int.from_bytes(message[4:8], "big")
-            message = message[8:]
+            self.send_message(self.INTERESTED, b"")
 
-            downloaded_piece += message
-            piece_offset += block_size
+            _, message_id, message = self.receive_message()
+            assert message_id == self.UNCHOKE
 
-        downloaded_piece_hash = hashlib.sha1(downloaded_piece).hexdigest()
+            piece_offset = 0
+            while piece_offset < piece.length:
+                block_size = min(self.BLOCK_SIZE, piece.length - piece_offset)
 
-        if downloaded_piece_hash != torrent_meta.piece_hashes[piece_index]:
-            log.error(f"Integrity check failed for piece {piece_index}")
-        else:
-            print(f"Downloaded piece: {piece_index} successfully")
+                payload = (
+                    piece.piece_num.to_bytes(4, "big")
+                    + piece_offset.to_bytes(4, "big")
+                    + block_size.to_bytes(4, "big")
+                )
+
+                self.send_message(self.REQUEST, payload)
+
+                _, message_id, message = self.receive_message()
+                assert message_id == self.PIECE
+
+                block_piece = int.from_bytes(message[:4], "big")
+                block_begin = int.from_bytes(message[4:8], "big")
+                message = message[8:]
+
+                downloaded_piece += message
+                piece_offset += block_size
+
+            downloaded_piece_hash = hashlib.sha1(downloaded_piece).hexdigest()
+
+            if downloaded_piece_hash != piece.piece_hash:
+                log.error(f"Integrity check failed for piece {piece.piece_num}")
+                raise Exception(f"Integrity check failed for piece: {piece.piece_num}")
+            
+            print(f"Downloaded piece: {piece.piece_num} successfully")
             return downloaded_piece
+        except AssertionError as e:
+            downloaded_piece = b""
+            print(f"Error with download_piece protocol")
+            raise e
+        finally:
+            self.disconnect()
         
-        socket.close()
 
     def perform_handshake(self, info_hash):
         self.connect()
@@ -119,9 +134,3 @@ class PeerClient:
         log.info(f"Received message of type: {msg_id}")
         return (length, msg_id, message[1:])
     
-    def calculate_piece_length(self, torrent_meta, piece_num):
-        num_pieces = len(torrent_meta.piece_hashes)
-        if num_pieces - 1 != piece_num:
-            return torrent_meta.piece_length
-        else:
-            return torrent_meta.file_length % torrent_meta.piece_length

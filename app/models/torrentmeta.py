@@ -1,11 +1,9 @@
 import hashlib
-from dataclasses import dataclass
 from typing import List
 
 from app.util.bencode import encode_bencode
 
 
-@dataclass
 class TorrentMeta:
     tracker_url: str
     file_length: int

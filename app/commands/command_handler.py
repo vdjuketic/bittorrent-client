@@ -8,6 +8,7 @@ from app.models.torrentmeta import TorrentMeta
 from app.peer.request_util import get_peers_from_tracker
 from app.peer.peer_client import PeerClient
 from app.util.file_util import write_to_file
+from app.peer.peer_control import Downloader
 
 
 def handle_command(command: str) -> Any:
@@ -130,17 +131,12 @@ def handle_download_command(location, filename):
         try:
             with open(filename, "rb") as file:
                 torrent_meta = TorrentMeta(decode_bencode(file.read()))
-                peers = get_peers_from_tracker(torrent_meta)
 
-                # TODO download from multiple peers
-                client = PeerClient(peers[0])
-                client.connect()
-                client.perform_handshake(torrent_meta.info_hash)
-                content = client.download(
-                    torrent_meta
-                )
-                write_to_file(content, location)
-                print(f"Downloaded {filename} downloaded to {location}.")
+                downloader = Downloader(torrent_meta)
+                downloader.download()
+
+                #write_to_file(content, location)
+                #print(f"Downloaded {filename} downloaded to {location}.")
 
         except FileNotFoundError:
             log.error("File %s not found !", filename)
