@@ -84,7 +84,7 @@ class PeerClient:
 
             print(f"Downloaded piece: {piece.piece_num} successfully")
             piece.result = downloaded_piece
-        except AssertionError as e:
+        except AssertionError or TimeoutError as e:
             downloaded_piece = b""
             print(f"Error with download_piece protocol")
             raise e
