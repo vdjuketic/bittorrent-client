@@ -4,7 +4,8 @@ from app.peer.request_util import get_peers_from_tracker
 from app.peer.peer_client import PeerClient, PeerClientStatus
 from app.models.piece import Piece, PieceStatus
 
-MAX_WORKERS = 5  
+MAX_WORKERS = 5
+
 
 class Downloader:
     free_peers = []
@@ -13,7 +14,7 @@ class Downloader:
     downloaded = 0
     total = 0
 
-    def __init__ (self, torrent_meta):
+    def __init__(self, torrent_meta):
         self.torrent_meta = torrent_meta
         self.executor = ThreadPoolExecutor(MAX_WORKERS)
 
@@ -38,7 +39,6 @@ class Downloader:
                     self.free_peers.append(peer)
                     print(f"freed peer {peer.host}")
                 break
-                
 
     def download(self):
         peer_urls = get_peers_from_tracker(self.torrent_meta)
@@ -53,19 +53,16 @@ class Downloader:
 
             self.executor.submit(self.process_piece, piece)
             print(f"added job for {piece.piece_num}")
-        
 
         while True:
             if self.total == self.downloaded:
                 self.executor.shutdown(wait=False)
                 break
 
-            
         print("all jobs finished")
-        print(*self.pieces, sep = "\n")
-                        
+        print(*self.pieces, sep="\n")
+
         content = b""
         for piece in self.pieces:
             content += piece.result
         return content
-        

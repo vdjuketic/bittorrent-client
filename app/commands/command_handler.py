@@ -18,7 +18,7 @@ def handle_command(command: str) -> Any:
 
     if command == "decode":
         parser.add_argument("bencoded_value")
-        
+
         p = parser.parse_args()
         handle_decode_command(p.bencoded_value.encode())
 
@@ -48,7 +48,7 @@ def handle_command(command: str) -> Any:
 
         p = parser.parse_args()
         handle_download_piece_command(p.output, p.filename, p.piece_index)
-    
+
     elif command == "download":
         parser.add_argument("--output", "-o")
         parser.add_argument("filename")
@@ -113,9 +113,7 @@ def handle_download_piece_command(location, filename, piece_index):
                 client = PeerClient(peers[0])
 
                 piece = Piece(int(piece_index), torrent_meta)
-                content = client.download_piece(
-                    piece
-                )
+                content = client.download_piece(piece)
                 write_to_file(piece.result, location)
                 print(f"Piece {piece_index} downloaded to {location}.")
 
@@ -124,6 +122,7 @@ def handle_download_piece_command(location, filename, piece_index):
 
     except FileNotFoundError:
         log.error("File %s not found !", filename)
+
 
 def handle_download_command(location, filename):
     try:

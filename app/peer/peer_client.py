@@ -7,10 +7,12 @@ from enum import Enum
 
 from app.models.piece import Piece
 
+
 class PeerClientStatus(Enum):
     DISCONNECTED = 1
     CONNECTED = 2
     WORKING = 3
+
 
 class PeerClient:
     UNCHOKE = 1
@@ -31,7 +33,7 @@ class PeerClient:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, int(self.port)))
         self.status = PeerClientStatus.CONNECTED
-    
+
     def disconnect(self):
         self.socket.close()
         self.status = PeerClientStatus.DISCONNECTED
@@ -79,7 +81,7 @@ class PeerClient:
             if downloaded_piece_hash != piece.piece_hash:
                 log.error(f"Integrity check failed for piece {piece.piece_num}")
                 raise Exception(f"Integrity check failed for piece: {piece.piece_num}")
-            
+
             print(f"Downloaded piece: {piece.piece_num} successfully")
             piece.result = downloaded_piece
         except AssertionError as e:
@@ -92,7 +94,6 @@ class PeerClient:
             raise e
         finally:
             self.disconnect()
-        
 
     def perform_handshake(self, info_hash):
         self.connect()
@@ -145,4 +146,3 @@ class PeerClient:
 
         log.info(f"Received message of type: {msg_id}")
         return (length, msg_id, message[1:])
-    
