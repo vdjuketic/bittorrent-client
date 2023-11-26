@@ -4,6 +4,7 @@ import struct
 import hashlib
 import logging as log
 from enum import Enum
+from socket import error as SocketError
 
 from app.models.piece import Piece
 
@@ -89,6 +90,10 @@ class PeerClient:
             print(f"Error with download_piece protocol")
             raise e
         except AttributeError as e:
+            downloaded_piece = b""
+            print(e.obj)
+            raise e
+        except SocketError as e:
             downloaded_piece = b""
             print(e.obj)
             raise e
