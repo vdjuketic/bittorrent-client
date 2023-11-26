@@ -33,7 +33,8 @@ class Downloader:
                     self.executor.submit(self.process_piece, piece)
 
                 self.free_peers.append(peer)
-            break
+                print(f"freed peer {peer.host}")
+                break
                 
 
     def download(self):

@@ -124,7 +124,6 @@ class PeerClient:
         if not length:
             return (0, -1, b"")
 
-        
         message = self.socket.recv(length)
 
         received = len(message)
