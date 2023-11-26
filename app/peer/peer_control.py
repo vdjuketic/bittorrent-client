@@ -33,7 +33,7 @@ class Downloader:
                     print(f"freed peer {peer.host}")
                 except AttributeError:
                     print(f"removed peer {peer.host}")
-                except:
+                except Exception as e:
                     print(f"job for {piece.piece_num} failed")
                     self.executor.submit(self.process_piece, piece)
                     self.free_peers.append(peer)
