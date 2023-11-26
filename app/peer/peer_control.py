@@ -21,7 +21,7 @@ class Downloader:
     def process_piece(self, piece):
         while True:
             if len(self.free_peers) > 0:
-                peer = self.free_peers.pop()
+                peer = self.free_peers.pop(0)
 
                 try:
                     print(f"starting download of {piece.piece_num} on peer {peer.host}")
@@ -34,7 +34,7 @@ class Downloader:
                 except AttributeError:
                     print(f"removed peer {peer.host}")
                 except Exception as e:
-                    print(f"job for {piece.piece_num} failed")
+                    print(f"job for {piece.piece_num} failed with {e.args}")
                     self.executor.submit(self.process_piece, piece)
                     self.free_peers.append(peer)
                     print(f"freed peer {peer.host}")

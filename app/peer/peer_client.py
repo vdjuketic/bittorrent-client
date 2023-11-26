@@ -33,6 +33,7 @@ class PeerClient:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, int(self.port)))
         self.status = PeerClientStatus.CONNECTED
+        self.socket.settimeout(None)
 
     def disconnect(self):
         self.socket.close()
@@ -98,7 +99,7 @@ class PeerClient:
     def perform_handshake(self, info_hash):
         self.connect()
         request = self.generate_handshake_message(info_hash, b"00112233445566778899")
-        self.socket.send(request)
+        self.socket.sendall(request)
 
         response = self.socket.recv(1024)
         peer_id = response[-20:]
