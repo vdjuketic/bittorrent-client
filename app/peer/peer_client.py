@@ -4,7 +4,6 @@ import struct
 import hashlib
 import logging as log
 from enum import Enum
-from socket import error as SocketError
 
 from app.models.piece import Piece
 
@@ -91,11 +90,7 @@ class PeerClient:
             raise e
         except AttributeError as e:
             downloaded_piece = b""
-            print(e.obj)
-            raise e
-        except SocketError as e:
-            downloaded_piece = b""
-            print(e.obj)
+            print(e.args)
             raise e
         finally:
             self.disconnect()
@@ -132,7 +127,7 @@ class PeerClient:
         return message[8:]
 
     def receive_message(self) -> tuple[int, int, bytes]:
-        self.socket.settimeout(1)
+        self.socket.settimeout(2)
         length = int.from_bytes(self.socket.recv(4), "big")
         self.socket.settimeout(None)
 

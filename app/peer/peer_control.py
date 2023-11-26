@@ -1,5 +1,4 @@
 from concurrent.futures import ThreadPoolExecutor
-from socket import error as SocketError
 
 from app.peer.request_util import get_peers_from_tracker
 from app.peer.peer_client import PeerClient, PeerClientStatus
@@ -32,7 +31,7 @@ class Downloader:
                     self.downloaded += 1
                     self.free_peers.append(peer)
                     print(f"freed peer {peer.host}")
-                except AttributeError or SocketError:
+                except AttributeError:
                     print(f"removed peer {peer.host}")
                 except:
                     print(f"job for {piece.piece_num} failed")
