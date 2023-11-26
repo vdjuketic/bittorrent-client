@@ -110,10 +110,15 @@ def handle_download_piece_command(location, filename, piece_index):
                 torrent_meta = TorrentMeta(decode_bencode(file.read()))
                 peers = get_peers_from_tracker(torrent_meta)
 
-                client = PeerClient(peers[1])
+                for peer in peers:
+                    client = PeerClient(peer)
+                    piece = Piece(int(piece_index), torrent_meta)
+                    try:
+                        client.download_piece(piece)
+                        break
+                    except:
+                        continue
 
-                piece = Piece(int(piece_index), torrent_meta)
-                client.download_piece(piece)
                 write_to_file(piece.result, location)
                 print(f"Piece {piece_index} downloaded to {location}.")
 
