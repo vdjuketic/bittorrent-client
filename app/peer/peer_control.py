@@ -1,72 +1,67 @@
-from pebble import ProcessPool
-from concurrent.futures import TimeoutError 
+from concurrent.futures import ThreadPoolExecutor
 
 from app.peer.request_util import get_peers_from_tracker
 from app.peer.peer_client import PeerClient, PeerClientStatus
 from app.models.piece import Piece, PieceStatus
 
-MAX_WORKERS = 5
-
-pieces = []
-
-#TODO bind job to peer instead of piece
-class PieceJob:
-    def __init__(self, piece):
-        self.piece = piece
-    
-    def process_piece(self, piece, peers):
-        for peer, status in peers:
-            if status == False:
-                status == True
-                print(f"adding piece {piece.piece_num} to peer {peer.host}")
-                peer.download_piece(piece)
-                break
-
-    def task_done(self, future):
-        try:
-            print("task done")
-            piece_num = future.result()
-            for piece in pieces:
-                if piece.piece_num == piece_num:
-                    piece.status = PieceStatus.COMPLETED
-                    downloaded += 1
-
-        except Exception as error:
-            print("Function raised %s" % error)
-            print(error.traceback)  # traceback of the function
+MAX_WORKERS = 5  
 
 class Downloader:
-    jobs = []
-    peers = []
+    free_peers = []
+    pieces = []
 
     downloaded = 0
+    total = 0
 
     def __init__ (self, torrent_meta):
         self.torrent_meta = torrent_meta
-        
+        self.executor = ThreadPoolExecutor(MAX_WORKERS)
+
+    def process_piece(self, piece):
+        while True:
+            if len(self.free_peers) > 0:
+                peer = self.free_peers.pop()
+
+                try:
+                    print(f"starting download of {piece.piece_num} on peer {peer.host}")
+                    peer.download_piece(piece)
+                    print(f"job for {piece.piece_num} passed")
+                    piece.status = PieceStatus.COMPLETED
+                    self.downloaded += 1
+                except:
+                    print(f"job for {piece.piece_num} failed")
+                    self.executor.submit(self.process_piece, piece)
+
+                self.free_peers.append(peer)
+            break
+                
 
     def download(self):
         peer_urls = get_peers_from_tracker(self.torrent_meta)
 
         for peer_url in peer_urls:
-            self.peers.append((PeerClient(peer_url), False))
+            self.free_peers.append(PeerClient(peer_url))
 
         for piece_num in range(len(self.torrent_meta.piece_hashes)):
             piece = Piece(piece_num, self.torrent_meta)
-            pieces.append(piece)
-            self.jobs.append(piece)
+            self.pieces.append(piece)
+            self.total += 1
+
+            self.executor.submit(self.process_piece, piece)
+            print(f"added job for {piece.piece_num}")
         
-        with ProcessPool(max_workers=5, max_tasks=10) as pool:
-            for piece in pieces:
-                p = PieceJob(piece)
-                future = pool.schedule(p.process_piece, args=[piece, self.peers])
-                future.add_done_callback(p.task_done)
+
+        while True:
+            if self.total == self.downloaded:
+                self.executor.shutdown(wait=False)
+                break
+
             
-        print("bleh")
-        print(pieces)
+        print("all jobs finished")
+        print(*self.pieces, sep = "\n")
                         
-        #content = b""
-        #for piece in self.pieces:
-        #    content += piece.result
-        #return content
+        content = b""
+        for piece in self.pieces:
+            content += piece.result
+        return content
         

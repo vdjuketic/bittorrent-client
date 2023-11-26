@@ -9,6 +9,7 @@ from app.peer.request_util import get_peers_from_tracker
 from app.peer.peer_client import PeerClient
 from app.util.file_util import write_to_file
 from app.peer.peer_control import Downloader
+from app.models.piece import Piece
 
 
 def handle_command(command: str) -> Any:
@@ -95,8 +96,8 @@ def handle_handshake_command(filename, url):
             torrent_meta = TorrentMeta(decode_bencode(file.read()))
 
             client = PeerClient(tuple(url.split(":")))
-            client.connect()
             client.perform_handshake(torrent_meta.info_hash)
+            client.disconnect()
 
     except FileNotFoundError:
         log.error("File %s not found !", filename)
@@ -109,15 +110,13 @@ def handle_download_piece_command(location, filename, piece_index):
                 torrent_meta = TorrentMeta(decode_bencode(file.read()))
                 peers = get_peers_from_tracker(torrent_meta)
 
-                # TODO download from multiple peers
                 client = PeerClient(peers[0])
-                client.connect()
-                client.perform_handshake(torrent_meta.info_hash)
+
+                piece = Piece(int(piece_index), torrent_meta)
                 content = client.download_piece(
-                    torrent_meta,
-                    int(piece_index)
+                    piece
                 )
-                write_to_file(content, location)
+                write_to_file(piece.result, location)
                 print(f"Piece {piece_index} downloaded to {location}.")
 
         except FileNotFoundError:
@@ -133,10 +132,10 @@ def handle_download_command(location, filename):
                 torrent_meta = TorrentMeta(decode_bencode(file.read()))
 
                 downloader = Downloader(torrent_meta)
-                downloader.download()
+                content = downloader.download()
 
-                #write_to_file(content, location)
-                #print(f"Downloaded {filename} downloaded to {location}.")
+                write_to_file(content, location)
+                print(f"Downloaded {filename} downloaded to {location}.")
 
         except FileNotFoundError:
             log.error("File %s not found !", filename)

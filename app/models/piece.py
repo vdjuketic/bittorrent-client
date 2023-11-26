@@ -29,3 +29,6 @@ class Piece():
             return torrent_meta.piece_length
         else:
             return torrent_meta.file_length % torrent_meta.piece_length
+        
+    def __str__(self):
+        return f"Piece num: {self.piece_num}, status: {self.status}"

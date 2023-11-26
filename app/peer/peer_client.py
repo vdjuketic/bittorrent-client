@@ -80,7 +80,7 @@ class PeerClient:
                 raise Exception(f"Integrity check failed for piece: {piece.piece_num}")
             
             print(f"Downloaded piece: {piece.piece_num} successfully")
-            return downloaded_piece
+            piece.result = downloaded_piece
         except AssertionError as e:
             downloaded_piece = b""
             print(f"Error with download_piece protocol")
@@ -117,12 +117,16 @@ class PeerClient:
         return message[8:]
 
     def receive_message(self) -> tuple[int, int, bytes]:
+        self.socket.settimeout(1)
         length = int.from_bytes(self.socket.recv(4), "big")
+        self.socket.settimeout(None)
 
         if not length:
             return (0, -1, b"")
 
+        
         message = self.socket.recv(length)
+
         received = len(message)
 
         msg_id = int.from_bytes(message[:1], "big")
