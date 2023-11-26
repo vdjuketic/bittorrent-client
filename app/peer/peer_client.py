@@ -33,7 +33,6 @@ class PeerClient:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, int(self.port)))
         self.status = PeerClientStatus.CONNECTED
-        self.socket.settimeout(None)
 
     def disconnect(self):
         self.socket.close()
@@ -102,6 +101,7 @@ class PeerClient:
         self.socket.sendall(request)
 
         response = self.socket.recv(1024)
+
         peer_id = response[-20:]
         self.hex_peer_id = binascii.hexlify(peer_id).decode()
 
@@ -128,9 +128,7 @@ class PeerClient:
         return message[8:]
 
     def receive_message(self) -> tuple[int, int, bytes]:
-        self.socket.settimeout(10)
         length = int.from_bytes(self.socket.recv(4), "big")
-        self.socket.settimeout(None)
 
         if not length:
             return (0, -1, b"")
