@@ -128,7 +128,9 @@ class PeerClient:
         return message[8:]
 
     def receive_message(self) -> tuple[int, int, bytes]:
+        self.socket.settimeout(10)
         length = int.from_bytes(self.socket.recv(4), "big")
+        self.socket.settimeout(None)
 
         if not length:
             return (0, -1, b"")
