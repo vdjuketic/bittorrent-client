@@ -25,6 +25,7 @@ class PeerClient:
         self.host, self.port = url
         self.socket = None
         self.status = PeerClientStatus.DISCONNECTED
+        self.hex_peer_id = ""
 
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -85,6 +86,10 @@ class PeerClient:
             downloaded_piece = b""
             print(f"Error with download_piece protocol")
             raise e
+        except AttributeError as e:
+            downloaded_piece = b""
+            print(e.obj)
+            raise e
         finally:
             self.disconnect()
         
@@ -96,8 +101,12 @@ class PeerClient:
 
         response = self.socket.recv(1024)
         peer_id = response[-20:]
-        hex_peer_id = binascii.hexlify(peer_id).decode()
-        print(f"Peer ID: {hex_peer_id}")
+        self.hex_peer_id = binascii.hexlify(peer_id).decode()
+
+        if self.hex_peer_id == "":
+            raise AttributeError(f"Invalid peer ID for {self.host}")
+
+        print(f"Peer ID: {self.hex_peer_id}")
 
     def generate_handshake_message(self, info_hash, peer_id):
         length = struct.pack(">B", 19)
