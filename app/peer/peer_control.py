@@ -60,7 +60,6 @@ class Downloader:
                 break
 
         print("all jobs finished")
-        print(*self.pieces, sep="\n")
 
         content = b""
         for piece in self.pieces:
