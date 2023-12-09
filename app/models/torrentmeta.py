@@ -1,16 +1,9 @@
 import hashlib
-from typing import List
 
-from app.util.bencode import encode_bencode
+from util.bencode import encode_bencode
 
 
 class TorrentMeta:
-    tracker_url: str
-    file_length: int
-    info_hash: str
-    piece_length: int
-    piece_hashes: List[str]
-
     def __init__(self, data):
         self.tracker_url = data["announce"].decode()
         self.file_length = data["info"]["length"]

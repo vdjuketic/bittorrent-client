@@ -1,8 +1,8 @@
 import requests
 
-from app.models.torrentmeta import TorrentMeta
-from app.models.tracker_dto import TrackerDTO
-from app.util.bencode import decode_bencode
+from models.torrentmeta import TorrentMeta
+from models.tracker_dto import TrackerDTO
+from util.bencode import decode_bencode
 
 
 def get_peers_from_tracker(torrent_meta: TorrentMeta):
@@ -12,7 +12,6 @@ def get_peers_from_tracker(torrent_meta: TorrentMeta):
     peers = decode_peers(response.content)
     peer_urls = []
     for ip, port in peers:
-        print(f"{ip}:{port}")
         peer_urls.append((ip, port))
     return peer_urls
 

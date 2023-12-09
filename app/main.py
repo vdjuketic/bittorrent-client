@@ -1,5 +1,5 @@
 import sys
-from app.commands.command_handler import handle_command
+from commands.command_handler import handle_command
 
 
 def main():

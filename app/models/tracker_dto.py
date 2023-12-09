@@ -1,7 +1,7 @@
 import hashlib
 from dataclasses import dataclass
 
-from app.models.torrentmeta import TorrentMeta
+from models.torrentmeta import TorrentMeta
 
 
 @dataclass

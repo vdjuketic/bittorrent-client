@@ -1,6 +1,6 @@
 from enum import Enum
 
-from app.models.torrentmeta import TorrentMeta
+from models.torrentmeta import TorrentMeta
 
 
 class PieceStatus(Enum):

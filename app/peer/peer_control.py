@@ -1,8 +1,8 @@
 from concurrent.futures import ThreadPoolExecutor
 
-from app.peer.request_util import get_peers_from_tracker
-from app.peer.peer_client import PeerClient, PeerClientStatus
-from app.models.piece import Piece, PieceStatus
+from peer.request_util import get_peers_from_tracker
+from peer.peer_client import PeerClient
+from models.piece import Piece, PieceStatus
 
 MAX_WORKERS = 5
 

@@ -2,28 +2,27 @@ import logging as log
 
 
 def encode_bencode(data):
-    log.info(f"encoding : {data}")
-
-    if isinstance(data, int):
-        return f"i{data}e".encode()
-    elif isinstance(data, str):
-        return f"{len(data)}:{data}".encode()
-    elif isinstance(data, bytes):
-        return f"{len(data)}:".encode() + data
-    elif isinstance(data, list):
-        res = "l".encode()
-        for i in data:
-            res += encode_bencode(i)
-        res += "e".encode()
-        return res
-    elif isinstance(data, dict):
-        res = "d".encode()
-        for key, val in data.items():
-            res += encode_bencode(key) + encode_bencode(val)
-        res += "e".encode()
-        return res
-    else:
-        raise TypeError("Encoding type not supported")
+    match data:
+        case int():
+            return f"i{data}e".encode()
+        case str():
+            return f"{len(data)}:{data}".encode()
+        case bytes():
+            return f"{len(data)}:".encode() + data
+        case list():
+            res = "l".encode()
+            for i in data:
+                res += encode_bencode(i)
+            res += "e".encode()
+            return res
+        case dict():
+            res = "d".encode()
+            for key, val in data.items():
+                res += encode_bencode(key) + encode_bencode(val)
+            res += "e".encode()
+            return res
+        case _:
+            raise TypeError("Encoding type not supported")
 
 
 def decode_bencode(bencoded_value):
@@ -44,15 +43,12 @@ def decode_bencode_with_end_delimeter(bencoded_value):
         return decode_dictionary(bencoded_value)
 
     else:
-        raise NotImplementedError(
-            "Only strings, digits and lists are supported at the moment"
-        )
+        raise ValueError("Only strings, digits, dictionaries, and lists are allowed")
 
 
 def decode_string(bencoded_string):
-    log.debug(f"decoding string: {bencoded_string}")
-
     colon_index = bencoded_string.find(b":")
+
     if colon_index == -1:
         raise ValueError("Invalid encoded value")
 
@@ -65,8 +61,6 @@ def decode_string(bencoded_string):
 
 
 def decode_int(bencoded_int):
-    log.debug(f"decoding int: {bencoded_int}")
-
     end_delimeter = bencoded_int.find(b"e")
     bencoded_int = bencoded_int[1:end_delimeter]
 
@@ -76,8 +70,6 @@ def decode_int(bencoded_int):
 
 
 def decode_list(bencoded_list):
-    log.debug(f"decoding list: {bencoded_list}")
-
     decoded_list = []
     current_char = 1
 
@@ -92,8 +84,6 @@ def decode_list(bencoded_list):
 
 
 def decode_dictionary(bencoded_dictionary):
-    log.debug(f"decoding dictionary: {bencoded_dictionary}")
-
     decoded_dictionary = {}
     current_char = 1
 
